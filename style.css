@@ -31,3 +31,20 @@ canvas {
     margin: auto;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+
+#diagramContainer {
+    margin-top: 20px;
+}
+
+#mouthDiagram {
+    width: 260px;
+    border-radius: 10px;
+    border: 2px solid #444;
+    display: none;
+}
+
+#lowConfidenceWarning {
+    color: #b00020;
+    font-weight: bold;
+}
+
