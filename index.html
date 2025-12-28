@@ -1,1 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dental Tool Recognition</title>
 
+    <!-- Mobile Safari requirements -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+
+    <!-- Teachable Machine helper -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Dental Tool Recognition</h1>
+
+    <button id="startButton">Start Camera</button>
+
+    <div id="cameraContainer">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" width="224" height="224"></canvas>
+    </div>
+
+    <div id="output">
+        <p><strong>Detected Tool:</strong> <span id="toolName">-</span></p>
+        <p><strong>Mouth Region:</strong> <span id="mouthRegion">-</span></p>
+        <p><strong>Confidence:</strong> <span id="confidence">-</span></p>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
