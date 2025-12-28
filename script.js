@@ -55,6 +55,7 @@ async function loadModel() {
 
 
 
+
 async function startCamera() {
     video = document.getElementById("video");
     canvas = document.getElementById("canvas");
@@ -93,20 +94,7 @@ async function startCamera() {
             resolve();
         };
     });
-}
-
-
-
-
-    video.srcObject = stream;
-
-    return new Promise(resolve => {
-        video.onloadedmetadata = () => {
-            video.play();
-            resolve();
-        };
-    });
-}
+} // This is the END of the startCamera function. Everything below this should be new code.
 
 
 async function predictLoop() {
@@ -149,8 +137,6 @@ async function predictLoop() {
 
     setTimeout(() => requestAnimationFrame(predictLoop), 150);
 }
-
-
 
 
 document.getElementById("startButton").addEventListener("click", async () => {
