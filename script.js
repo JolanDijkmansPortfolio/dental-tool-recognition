@@ -1,5 +1,8 @@
 console.log("script.js loaded");
-alert("script.js loaded");
+
+if (typeof tmImage === "undefined") {
+    alert("tmImage is undefined — TM script not loaded");
+}
 
 const modelURL = "model/model.json";
 const metadataURL = "model/metadata.json";
