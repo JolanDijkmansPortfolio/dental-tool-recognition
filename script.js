@@ -1,4 +1,4 @@
-console.log("script.js loaded");
+console.log("script.js loaded - FIXED VERSION");
 
 const modelURL = "./model/model.json";
 const metadataURL = "./model/metadata.json";
@@ -9,25 +9,34 @@ let canvas;
 let ctx;
 let isRunning = false;
 let videoTrack;
-const CONFIDENCE_THRESHOLD = 0.75;
+const CONFIDENCE_THRESHOLD = 0.60; // Lowered to 60% since you're getting 50-100%
 
-// Tool configuration
+// CORRECTED: Map YOUR actual class names to tools and mouth regions
 const toolConfig = {
-    "Mirror": {
-        region: "All quadrants (visual inspection)",
-        diagram: "./mouth-diagrams/mirror.png"
+    "red_1": {
+        region: "Upper right quadrant (Maxillary right)",
+        diagram: "./mouth-diagrams/mirror.png",  // Change to appropriate tool
+        toolType: "Red Tool 1"
     },
-    "Explorer": {
-        region: "Occlusal surfaces",
-        diagram: "./mouth-diagrams/explorer.png"
+    "red_2": {
+        region: "Upper left quadrant (Maxillary left)",
+        diagram: "./mouth-diagrams/explorer.png",  // Change to appropriate tool
+        toolType: "Red Tool 2"
     },
-    "Scaler": {
-        region: "Gingival margin",
-        diagram: "./mouth-diagrams/scaler.png"
+    "blue_1": {
+        region: "Lower right quadrant (Mandibular right)",
+        diagram: "./mouth-diagrams/scaler.png",  // Change to appropriate tool
+        toolType: "Blue Tool 1"
     },
-    "Drill": {
-        region: "Enamel & dentin",
-        diagram: "./mouth-diagrams/drill.png"
+    "blue_2": {
+        region: "Lower left quadrant (Mandibular left)",
+        diagram: "./mouth-diagrams/drill.png",  // Change to appropriate tool
+        toolType: "Blue Tool 2"
+    },
+    "Nothing": {
+        region: "No tool detected",
+        diagram: "",
+        toolType: "No Tool"
     }
 };
 
@@ -43,7 +52,6 @@ function showStatus(message, isError = false) {
 async function loadModel() {
     console.log("Loading Teachable Machine model...");
     
-    // Check if tmImage is available
     if (typeof tmImage === 'undefined') {
         throw new Error("Teachable Machine library not loaded");
     }
@@ -53,7 +61,9 @@ async function loadModel() {
     try {
         model = await tmImage.load(modelURL, metadataURL);
         console.log("Model loaded successfully");
-        showStatus("Model loaded successfully!");
+        console.log("Available classes:", model.getClassLabels().join(", "));
+        
+        showStatus("Model loaded! Ready to detect tools.");
         return true;
     } catch (err) {
         console.error("Model load error:", err);
@@ -71,7 +81,6 @@ async function startCamera() {
     showStatus("Requesting camera access...");
 
     try {
-        // iOS Safari compatible constraints - use 'ideal' instead of 'exact'
         const constraints = {
             video: {
                 facingMode: { ideal: "environment" },
@@ -88,7 +97,6 @@ async function startCamera() {
         
         showStatus("Camera started!");
 
-        // Try to enable flashlight (optional - may not work on all devices)
         try {
             const capabilities = videoTrack.getCapabilities();
             if (capabilities.torch) {
@@ -97,15 +105,11 @@ async function startCamera() {
                 });
                 console.log("✓ Torch enabled");
                 showStatus("Camera started with flash!");
-            } else {
-                console.log("ℹ Torch not supported on this device");
             }
         } catch (torchErr) {
-            console.log("Torch activation failed (non-critical):", torchErr);
-            // Don't show error - torch is optional
+            console.log("Torch not available");
         }
 
-        // Wait for video to be ready
         return new Promise((resolve, reject) => {
             video.onloadedmetadata = () => {
                 video.play()
@@ -116,7 +120,6 @@ async function startCamera() {
                     .catch(reject);
             };
             
-            // Timeout after 10 seconds
             setTimeout(() => reject(new Error("Video load timeout")), 10000);
         });
 
@@ -132,10 +135,7 @@ async function predictLoop() {
     if (!isRunning) return;
 
     try {
-        // Draw current video frame to canvas
         ctx.drawImage(video, 0, 0, 224, 224);
-        
-        // Get prediction
         const prediction = await model.predict(canvas);
 
         // Find best prediction
@@ -147,32 +147,50 @@ async function predictLoop() {
         }
 
         const confidence = best.probability;
-        const toolName = best.className;
+        const detectedClass = best.className;
 
         // Update confidence display
         document.getElementById("confidence").innerText =
             (confidence * 100).toFixed(1) + "%";
 
-        // Check if confidence is high enough
-        if (confidence >= CONFIDENCE_THRESHOLD && toolConfig[toolName]) {
-            // High confidence - show tool info
-            document.getElementById("toolName").innerText = toolName;
-            document.getElementById("mouthRegion").innerText =
-                toolConfig[toolName].region;
+        console.log("Detected:", detectedClass, "at", (confidence * 100).toFixed(1) + "%");
 
-            const img = document.getElementById("mouthDiagram");
-            img.src = toolConfig[toolName].diagram;
-            img.style.display = "block";
+        // Check if we have config for this class AND confidence is high enough
+        if (toolConfig.hasOwnProperty(detectedClass) && confidence >= CONFIDENCE_THRESHOLD) {
+            
+            // Don't show info for "Nothing" class
+            if (detectedClass === "Nothing") {
+                document.getElementById("toolName").innerText = "No tool detected";
+                document.getElementById("mouthRegion").innerText = "-";
+                document.getElementById("mouthDiagram").style.display = "none";
+                document.getElementById("lowConfidenceWarning").innerText = "";
+            } else {
+                // Show tool information
+                document.getElementById("toolName").innerText = toolConfig[detectedClass].toolType;
+                document.getElementById("mouthRegion").innerText = toolConfig[detectedClass].region;
 
-            document.getElementById("lowConfidenceWarning").innerText = "";
+                const img = document.getElementById("mouthDiagram");
+                img.src = toolConfig[detectedClass].diagram;
+                img.style.display = "block";
+
+                document.getElementById("lowConfidenceWarning").innerText = "";
+                
+                showStatus("✓ " + toolConfig[detectedClass].toolType + " detected!");
+            }
+
         } else {
-            // Low confidence or unknown tool
-            document.getElementById("toolName").innerText = "Uncertain";
+            // Low confidence or unknown class
+            document.getElementById("toolName").innerText = detectedClass || "Uncertain";
             document.getElementById("mouthRegion").innerText = "-";
-
             document.getElementById("mouthDiagram").style.display = "none";
-            document.getElementById("lowConfidenceWarning").innerText =
-                "Low confidence. Adjust tool position and lighting.";
+            
+            if (confidence < CONFIDENCE_THRESHOLD) {
+                document.getElementById("lowConfidenceWarning").innerText =
+                    "Confidence: " + (confidence * 100).toFixed(1) + "% (need " + (CONFIDENCE_THRESHOLD * 100) + "%+). Adjust lighting.";
+            } else {
+                document.getElementById("lowConfidenceWarning").innerText =
+                    "Unknown class: " + detectedClass;
+            }
         }
 
     } catch (err) {
@@ -180,13 +198,12 @@ async function predictLoop() {
         showStatus("Prediction error: " + err.message, true);
     }
 
-    // Continue loop
     setTimeout(() => requestAnimationFrame(predictLoop), 150);
 }
 
-// Button click handler - wrapped in DOMContentLoaded
+// Button click handler
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM ready, attaching button listener");
+    console.log("DOM ready");
     
     const button = document.getElementById("startButton");
     
@@ -198,9 +215,8 @@ document.addEventListener('DOMContentLoaded', function() {
     button.addEventListener("click", async () => {
         console.log("Button clicked!");
         
-        // Prevent multiple clicks
         if (isRunning) {
-            console.log("Already running, ignoring click");
+            console.log("Already running");
             return;
         }
 
@@ -208,13 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
         button.innerText = "Starting...";
         
         try {
-            // Step 1: Load model
             await loadModel();
-
-            // Step 2: Start camera
             await startCamera();
 
-            // Step 3: Begin prediction loop
             isRunning = true;
             button.innerText = "Camera Running ✓";
             button.style.backgroundColor = "#4CAF50";
@@ -225,12 +237,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showStatus("Error: " + err.message, true);
             alert("Failed to start: " + err.message);
             
-            // Reset button
             button.disabled = false;
             button.innerText = "Start Camera";
             button.style.backgroundColor = "";
         }
     });
-    
-    console.log("Button listener attached successfully");
 });
