@@ -1,9 +1,5 @@
 console.log("script.js loaded");
 
-if (typeof tmImage === "undefined") {
-    alert("tmImage is undefined — TM script not loaded");
-}
-
 const modelURL = "model/model.json";
 const metadataURL = "model/metadata.json";
 
@@ -14,6 +10,14 @@ let ctx;
 let isRunning = false;
 let videoTrack;
 const CONFIDENCE_THRESHOLD = 0.75;
+
+
+// Load Teachable Machine model
+async function loadModel() {
+    console.log("Loading Teachable Machine model...");
+    model = await tmImage.load(modelURL, metadataURL);
+    console.log("Model loaded successfully");
+}
 
 
 
@@ -49,23 +53,31 @@ const toolConfig = {
 
 
 document.getElementById("startButton").addEventListener("click", async () => {
-    alert("Button clicked");
+    const button = document.getElementById("startButton");
 
+    // Prevent multiple clicks
+    if (isRunning) return;
+
+    button.innerText = "Starting...";
+    
     try {
+        // 1️⃣ Load model (after user gesture)
         await loadModel();
-        alert("Model loaded");
 
+        // 2️⃣ Start camera with torch
         await startCamera();
-        alert("Camera started");
 
+        // 3️⃣ Begin prediction loop
         isRunning = true;
+        button.innerText = "Camera Running";
         predictLoop();
-    } catch (e) {
-        alert("Error: " + e.message);
-        console.error(e);
+
+    } catch (err) {
+        console.error("Error starting camera/model:", err);
+        alert("Error: " + err.message);
+        button.innerText = "Start Camera"; // revert button text
     }
 });
-
 
 
 async function startCamera() {
@@ -85,16 +97,14 @@ async function startCamera() {
     video.srcObject = stream;
     videoTrack = stream.getVideoTracks()[0];
 
-    // TRY to enable flashlight (torch)
+    // Try to enable flashlight
     try {
         const capabilities = videoTrack.getCapabilities();
         if (capabilities.torch) {
-            await videoTrack.applyConstraints({
-                advanced: [{ torch: true }]
-            });
+            await videoTrack.applyConstraints({ advanced: [{ torch: true }] });
             console.log("Torch enabled");
         } else {
-            console.log("Torch not supported on this device");
+            console.log("Torch not supported");
         }
     } catch (err) {
         console.log("Torch activation failed:", err);
@@ -106,7 +116,9 @@ async function startCamera() {
             resolve();
         };
     });
-} // This is the END of the startCamera function. Everything below this should be new code.
+}
+
+
 
 
 async function predictLoop() {
@@ -149,15 +161,3 @@ async function predictLoop() {
 
     setTimeout(() => requestAnimationFrame(predictLoop), 150);
 }
-
-
-document.getElementById("startButton").addEventListener("click", async () => {
-    if (isRunning) return;
-
-    isRunning = true;
-    document.getElementById("startButton").innerText = "Camera Running";
-
-    await loadModel();
-    await startCamera();
-    predictLoop();
-});
