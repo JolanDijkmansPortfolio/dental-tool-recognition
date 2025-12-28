@@ -1,3 +1,6 @@
+console.log("script.js loaded");
+alert("script.js loaded");
+
 const modelURL = "model/model.json";
 const metadataURL = "model/metadata.json";
 
