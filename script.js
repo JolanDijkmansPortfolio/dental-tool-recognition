@@ -1,3 +1,12 @@
+console.log("Basic JS test");
+
+document.getElementById("startButton").addEventListener("click", () => {
+    alert("Button works without ML");
+});
+
+
+
+/*
 console.log("script.js loaded");
 alert("script.js loaded");
 
@@ -161,6 +170,7 @@ document.getElementById("startButton").addEventListener("click", async () => {
     predictLoop();
 });
 
+*/
 
 
 
