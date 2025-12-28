@@ -7,6 +7,8 @@ let canvas;
 let ctx;
 let isRunning = false;
 
+const CONFIDENCE_THRESHOLD = 0.75;
+
 
 const toolToMouthRegion = {
     "Red_1": "Red 1 right",
