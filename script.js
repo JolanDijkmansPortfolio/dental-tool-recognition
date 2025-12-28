@@ -6,8 +6,9 @@ let video;
 let canvas;
 let ctx;
 let isRunning = false;
-
+let videoTrack;
 const CONFIDENCE_THRESHOLD = 0.75;
+
 
 
 const toolToMouthRegion = {
@@ -17,6 +18,28 @@ const toolToMouthRegion = {
     "Blue_2": "Blue 2 left",
     "Nothing": "Nothing here"
 };
+
+
+const toolConfig = {
+    "Mirror": {
+        region: "All quadrants (visual inspection)",
+        diagram: "mouth-diagrams/mirror.png"
+    },
+    "Explorer": {
+        region: "Occlusal surfaces",
+        diagram: "mouth-diagrams/explorer.png"
+    },
+    "Scaler": {
+        region: "Gingival margin",
+        diagram: "mouth-diagrams/scaler.png"
+    },
+    "Drill": {
+        region: "Enamel & dentin",
+        diagram: "mouth-diagrams/drill.png"
+    }
+};
+
+
 
 
 async function loadModel() {
@@ -33,12 +56,41 @@ async function startCamera() {
 
     const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-            facingMode: "environment",
+            facingMode: { exact: "environment" },
             width: 224,
             height: 224
         },
         audio: false
     });
+
+    video.srcObject = stream;
+    videoTrack = stream.getVideoTracks()[0];
+
+    // TRY to enable flashlight (torch)
+    try {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.torch) {
+            await videoTrack.applyConstraints({
+                advanced: [{ torch: true }]
+            });
+            console.log("Torch enabled");
+        } else {
+            console.log("Torch not supported on this device");
+        }
+    } catch (err) {
+        console.log("Torch activation failed:", err);
+    }
+
+    return new Promise(resolve => {
+        video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+        };
+    });
+}
+
+
+
 
     video.srcObject = stream;
 
@@ -54,13 +106,9 @@ async function startCamera() {
 async function predictLoop() {
     if (!isRunning) return;
 
-    // Draw video frame to canvas at 224x224
     ctx.drawImage(video, 0, 0, 224, 224);
-
-    // Run prediction
     const prediction = await model.predict(canvas);
 
-    // Get highest probability
     let best = prediction[0];
     for (let p of prediction) {
         if (p.probability > best.probability) {
@@ -68,17 +116,35 @@ async function predictLoop() {
         }
     }
 
-    // Update UI
-    document.getElementById("toolName").innerText = best.className;
+    const confidence = best.probability;
+    const toolName = best.className;
+
     document.getElementById("confidence").innerText =
-        (best.probability * 100).toFixed(1) + "%";
+        (confidence * 100).toFixed(1) + "%";
 
-    document.getElementById("mouthRegion").innerText =
-        toolToMouthRegion[best.className] || "Unknown";
+    if (confidence >= CONFIDENCE_THRESHOLD && toolConfig[toolName]) {
+        document.getElementById("toolName").innerText = toolName;
+        document.getElementById("mouthRegion").innerText =
+            toolConfig[toolName].region;
 
-    // Control prediction rate (important for iPhone)
+        const img = document.getElementById("mouthDiagram");
+        img.src = toolConfig[toolName].diagram;
+        img.style.display = "block";
+
+        document.getElementById("lowConfidenceWarning").innerText = "";
+    } else {
+        document.getElementById("toolName").innerText = "Uncertain";
+        document.getElementById("mouthRegion").innerText = "-";
+
+        document.getElementById("mouthDiagram").style.display = "none";
+        document.getElementById("lowConfidenceWarning").innerText =
+            "Low confidence. Adjust tool position and lighting.";
+    }
+
     setTimeout(() => requestAnimationFrame(predictLoop), 150);
 }
+
+
 
 
 document.getElementById("startButton").addEventListener("click", async () => {
