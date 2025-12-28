@@ -48,11 +48,23 @@ const toolConfig = {
 
 
 
-async function loadModel() {
-    model = await tmImage.load(modelURL, metadataURL);
-    console.log("Model loaded");
-}
+document.getElementById("startButton").addEventListener("click", async () => {
+    alert("Button clicked");
 
+    try {
+        await loadModel();
+        alert("Model loaded");
+
+        await startCamera();
+        alert("Camera started");
+
+        isRunning = true;
+        predictLoop();
+    } catch (e) {
+        alert("Error: " + e.message);
+        console.error(e);
+    }
+});
 
 
 
