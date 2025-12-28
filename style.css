@@ -6,6 +6,29 @@ body {
     padding: 20px;
 }
 
+#startButton {
+    padding: 15px 30px;
+    font-size: 18px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+#startButton:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#statusMessage {
+    margin: 10px 0;
+    padding: 10px;
+    min-height: 20px;
+    font-weight: bold;
+}
+
 #cameraContainer {
     position: relative;
     width: 224px;
@@ -17,6 +40,7 @@ video {
     height: 224px;
     border-radius: 8px;
     border: 2px solid #333;
+    background: #000;
 }
 
 canvas {
@@ -37,6 +61,7 @@ canvas {
 }
 
 #mouthDiagram {
+    max-width: 100%;
     width: 260px;
     border-radius: 10px;
     border: 2px solid #444;
@@ -46,5 +71,5 @@ canvas {
 #lowConfidenceWarning {
     color: #b00020;
     font-weight: bold;
+    margin-top: 10px;
 }
-
