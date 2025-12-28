@@ -1,1 +1,33 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
 
+#cameraContainer {
+    position: relative;
+    width: 224px;
+    margin: 20px auto;
+}
+
+video {
+    width: 224px;
+    height: 224px;
+    border-radius: 8px;
+    border: 2px solid #333;
+}
+
+canvas {
+    display: none;
+}
+
+#output {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    width: 260px;
+    margin: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
