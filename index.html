@@ -15,20 +15,24 @@
     
     <div id="statusMessage"></div>
 
-    <div id="cameraContainer">
-        <video id="video" autoplay playsinline muted></video>
-        <canvas id="canvas" width="224" height="224"></canvas>
-    </div>
+    <div id="mainContainer">
+        <!-- Camera on the left/top -->
+        <div id="cameraContainer">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="canvas" width="224" height="224"></canvas>
+        </div>
 
-    <div id="output">
-        <p><strong>Detected Tool:</strong> <span id="toolName">-</span></p>
-        <p><strong>Mouth Region:</strong> <span id="mouthRegion">-</span></p>
-        <p><strong>Confidence:</strong> <span id="confidence">-</span></p>
+        <!-- Diagram display - large and prominent -->
         <div id="diagramContainer">
-            <h3>Correct Mouth Region</h3>
-            <img id="mouthDiagram" src="" alt="Mouth diagram" />
+            <img id="mouthDiagram" src="" alt="Tool usage diagram" />
             <p id="lowConfidenceWarning"></p>
         </div>
+    </div>
+
+    <!-- Info below the image -->
+    <div id="output">
+        <p><strong>Detected Tool:</strong> <span id="toolName">-</span></p>
+        <p><strong>Confidence:</strong> <span id="confidence">-</span></p>
     </div>
 
     <!-- Load libraries in correct order -->
