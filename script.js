@@ -1,4 +1,4 @@
-console.log("script.js loaded - FIXED VERSION");
+console.log("script.js loaded - 13 Class Version");
 
 const modelURL = "./model/model.json";
 const metadataURL = "./model/metadata.json";
@@ -9,34 +9,61 @@ let canvas;
 let ctx;
 let isRunning = false;
 let videoTrack;
-const CONFIDENCE_THRESHOLD = 0.60; // Lowered to 60% since you're getting 50-100%
+const CONFIDENCE_THRESHOLD = 0.60;
 
-// CORRECTED: Map YOUR actual class names to tools and mouth regions
+// Tool configuration with all 13 classes
 const toolConfig = {
-    "red_1": {
-        region: "Upper right quadrant (Maxillary right)",
-        diagram: "./mouth-diagrams/mirror.png",  // Change to appropriate tool
-        toolType: "Red Tool 1"
+    "1-2.L": {
+        diagram: "./mouth-diagrams/1-2.L.png",
+        toolName: "Tool 1-2 (Left)"
     },
-    "red_2": {
-        region: "Upper left quadrant (Maxillary left)",
-        diagram: "./mouth-diagrams/explorer.png",  // Change to appropriate tool
-        toolType: "Red Tool 2"
+    "1-2.R": {
+        diagram: "./mouth-diagrams/1-2.R.png",
+        toolName: "Tool 1-2 (Right)"
     },
-    "blue_1": {
-        region: "Lower right quadrant (Mandibular right)",
-        diagram: "./mouth-diagrams/scaler.png",  // Change to appropriate tool
-        toolType: "Blue Tool 1"
+    "7-8.L": {
+        diagram: "./mouth-diagrams/7-8.L.png",
+        toolName: "Tool 7-8 (Left)"
     },
-    "blue_2": {
-        region: "Lower left quadrant (Mandibular left)",
-        diagram: "./mouth-diagrams/drill.png",  // Change to appropriate tool
-        toolType: "Blue Tool 2"
+    "7-8.R": {
+        diagram: "./mouth-diagrams/7-8.R.png",
+        toolName: "Tool 7-8 (Right)"
     },
-    "Nothing": {
-        region: "No tool detected",
+    "9-10.L": {
+        diagram: "./mouth-diagrams/9-10.L.png",
+        toolName: "Tool 9-10 (Left)"
+    },
+    "9-10.R": {
+        diagram: "./mouth-diagrams/9-10.R.png",
+        toolName: "Tool 9-10 (Right)"
+    },
+    "11-12.L": {
+        diagram: "./mouth-diagrams/11-12.L.png",
+        toolName: "Tool 11-12 (Left)"
+    },
+    "11-12.R": {
+        diagram: "./mouth-diagrams/11-12.R.png",
+        toolName: "Tool 11-12 (Right)"
+    },
+    "13-14.L": {
+        diagram: "./mouth-diagrams/13-14.L.png",
+        toolName: "Tool 13-14 (Left)"
+    },
+    "13-14.R": {
+        diagram: "./mouth-diagrams/13-14.R.png",
+        toolName: "Tool 13-14 (Right)"
+    },
+    "17-18.L": {
+        diagram: "./mouth-diagrams/17-18.L.png",
+        toolName: "Tool 17-18 (Left)"
+    },
+    "17-18.R": {
+        diagram: "./mouth-diagrams/17-18.R.png",
+        toolName: "Tool 17-18 (Right)"
+    },
+    "00-no": {
         diagram: "",
-        toolType: "No Tool"
+        toolName: "No Tool"
     }
 };
 
@@ -158,16 +185,14 @@ async function predictLoop() {
         // Check if we have config for this class AND confidence is high enough
         if (toolConfig.hasOwnProperty(detectedClass) && confidence >= CONFIDENCE_THRESHOLD) {
             
-            // Don't show info for "Nothing" class
-            if (detectedClass === "Nothing") {
+            // Handle "no tool" case
+            if (detectedClass === "00-no") {
                 document.getElementById("toolName").innerText = "No tool detected";
-                document.getElementById("mouthRegion").innerText = "-";
                 document.getElementById("mouthDiagram").style.display = "none";
                 document.getElementById("lowConfidenceWarning").innerText = "";
             } else {
                 // Show tool information
-                document.getElementById("toolName").innerText = toolConfig[detectedClass].toolType;
-                document.getElementById("mouthRegion").innerText = toolConfig[detectedClass].region;
+                document.getElementById("toolName").innerText = toolConfig[detectedClass].toolName;
 
                 const img = document.getElementById("mouthDiagram");
                 img.src = toolConfig[detectedClass].diagram;
@@ -175,18 +200,17 @@ async function predictLoop() {
 
                 document.getElementById("lowConfidenceWarning").innerText = "";
                 
-                showStatus("✓ " + toolConfig[detectedClass].toolType + " detected!");
+                showStatus("✓ " + toolConfig[detectedClass].toolName + " detected!");
             }
 
         } else {
             // Low confidence or unknown class
             document.getElementById("toolName").innerText = detectedClass || "Uncertain";
-            document.getElementById("mouthRegion").innerText = "-";
             document.getElementById("mouthDiagram").style.display = "none";
             
             if (confidence < CONFIDENCE_THRESHOLD) {
                 document.getElementById("lowConfidenceWarning").innerText =
-                    "Confidence: " + (confidence * 100).toFixed(1) + "% (need " + (CONFIDENCE_THRESHOLD * 100) + "%+). Adjust lighting.";
+                    "Low confidence - adjust tool position and lighting";
             } else {
                 document.getElementById("lowConfidenceWarning").innerText =
                     "Unknown class: " + detectedClass;
